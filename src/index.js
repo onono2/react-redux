@@ -2,7 +2,10 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
 import { combineReducers, applyMiddleware, createStore } from "redux";
+import { ajax } from "rxjs/ajax";
 import logger from "redux-logger";
+import { filter, delay, mergeMap, map, mapTo } from "rxjs/operators";
+import { ofType, createEpicMiddleware, combineEpics } from "redux-observable";
 import App from "./App";
 
 const initialState = {
@@ -73,10 +76,99 @@ const employeeReducer = (state = initialState, action) => {
   }
 };
 
+const pingReducer = (state = { isPinging: false, userinfo: "" }, action) => {
+  switch (action.type) {
+    case "PING":
+      return { ...state, isPinging: true };
+
+    case "PONG":
+      return { ...state, isPinging: false };
+
+    case "PONGPONG":
+      return { ...state, isPinging: true };
+
+    case "FETCH_USER_FULFILLED":
+      return { ...state, userinfo: action.userinfo };
+
+    default:
+      return state;
+  }
+};
+
+/*const store = createStore(
+  combineReducers({
+    emp: employeeReducer,
+    user: userReducer,
+    ping: pingReducer
+  }),
+  applyMiddleware(epicMidd)
+);*/
+
+const fetchUserFulfilled = userinfo => {
+  // console.log(userinfo);
+  return {
+    type: "FETCH_USER_FULFILLED",
+    userinfo
+  };
+};
+
+const PING = "PING";
+const PONG = "PONG";
+
+const ping = () => ({ type: PING });
+const pong = () => ({ type: PONG });
+
+const changeName = () => ({
+  type: "setName",
+  payload: "Onono Redux Observable",
+  age: 99
+});
+
+const pingEpic = action$ =>
+  action$.pipe(
+    filter(action => action.type === "PING"),
+    ofType("PING"),
+    delay(1000),
+    mapTo(pong()),
+    mapTo(changeName()),
+    mergeMap(() =>
+      ajax
+        .getJSON(`https://api.github.com/users/onono2`)
+        .pipe(map(response => fetchUserFulfilled(response)))
+    )
+  );
+
+const pongEpic = action$ =>
+  action$.pipe(
+    filter(action => action.type === "PONGPONG"),
+    ofType("PONGPONG"),
+    delay(3000),
+    mapTo(ping())
+  );
+
+/*
+const pingEpic = action$ => {
+  action$.pipe(
+    filter(action => action.type === "PING"),
+    ofType("PING"),
+    delay(1000), // Asynchronously wait 1000ms then continue
+    mapTo({ type: "PONG" })
+  );
+};*/
+const rootEpic = combineEpics(pingEpic, pongEpic);
+
+const epicMiddleware = createEpicMiddleware();
+
 const store = createStore(
-  combineReducers({ emp: employeeReducer, user: userReducer }),
-  applyMiddleware(logger)
+  combineReducers({
+    emp: employeeReducer,
+    user: userReducer,
+    ping: pingReducer
+  }),
+  applyMiddleware(epicMiddleware, logger)
 );
+
+epicMiddleware.run(rootEpic);
 
 ReactDOM.render(
   <Provider store={store}>
