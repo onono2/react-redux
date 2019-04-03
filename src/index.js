@@ -2,9 +2,17 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
 import { combineReducers, applyMiddleware, createStore } from "redux";
+import { of, concat } from "rxjs";
 import { ajax } from "rxjs/ajax";
 import logger from "redux-logger";
-import { filter, delay, mergeMap, map, mapTo } from "rxjs/operators";
+import {
+  filter,
+  delay,
+  mergeMap,
+  flatMap,
+  mapTo,
+  catchError
+} from "rxjs/operators";
 import { ofType, createEpicMiddleware, combineEpics } from "redux-observable";
 import App from "./App";
 
@@ -90,6 +98,9 @@ const pingReducer = (state = { isPinging: false, userinfo: "" }, action) => {
     case "FETCH_USER_FULFILLED":
       return { ...state, userinfo: action.userinfo };
 
+    case "FETCH_USER_REJECTED":
+      return { ...state, userinfo: action.payload, error: action.error };
+
     default:
       return state;
   }
@@ -105,7 +116,6 @@ const pingReducer = (state = { isPinging: false, userinfo: "" }, action) => {
 );*/
 
 const fetchUserFulfilled = userinfo => {
-  // console.log(userinfo);
   return {
     type: "FETCH_USER_FULFILLED",
     userinfo
@@ -128,13 +138,20 @@ const pingEpic = action$ =>
   action$.pipe(
     filter(action => action.type === "PING"),
     ofType("PING"),
-    delay(1000),
-    mapTo(pong()),
-    mapTo(changeName()),
-    mergeMap(() =>
-      ajax
-        .getJSON(`https://api.github.com/users/onono2`)
-        .pipe(map(response => fetchUserFulfilled(response)))
+    //delay(1000),
+    mergeMap(response =>
+      ajax.getJSON(`https://api.github.com/users/onono2hfdhdh`).pipe(
+        flatMap(response =>
+          concat(of(pong()), of(changeName()), of(fetchUserFulfilled(response)))
+        ),
+        catchError(error =>
+          of({
+            type: "FETCH_USER_REJECTED",
+            payload: error.xhr.response,
+            error: true
+          })
+        )
+      )
     )
   );
 
@@ -146,15 +163,6 @@ const pongEpic = action$ =>
     mapTo(ping())
   );
 
-/*
-const pingEpic = action$ => {
-  action$.pipe(
-    filter(action => action.type === "PING"),
-    ofType("PING"),
-    delay(1000), // Asynchronously wait 1000ms then continue
-    mapTo({ type: "PONG" })
-  );
-};*/
 const rootEpic = combineEpics(pingEpic, pongEpic);
 
 const epicMiddleware = createEpicMiddleware();

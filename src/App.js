@@ -117,7 +117,7 @@ const mapDispatchtoProps = dispatch => {
     },
     pongButton: () => {
       dispatch({
-        type: "PONGPONG"
+        type: "PONG"
       });
     }
   };

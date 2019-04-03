@@ -74,7 +74,6 @@ class User extends Component {
   };
 
   render() {
-    console.log(this.props.ping.userinfo.login);
     let partners =
       this.props && this.props.salary.length > 0 ? (
         this.props.salary.map((p, index) => (
@@ -98,7 +97,23 @@ class User extends Component {
         <h1>Hello:{this.props.username}</h1>
         <span>Age:{this.props.age}</span>
         <ul>{partners}</ul>
-        <span>{JSON.stringify(this.props.ping.userinfo, null, 2)}</span>
+
+        {this.props.ping.userinfo !== "" ? (
+          <span>
+            {this.props.ping.userinfo.avatar_url ? (
+              <img
+                alt="User Avatar"
+                src={this.props.ping.userinfo.avatar_url}
+              />
+            ) : (
+              ""
+            )}
+
+            {JSON.stringify(this.props.ping.userinfo, null, 2)}
+          </span>
+        ) : (
+          ""
+        )}
         <PingPongValue>
           is Pinging: ... {this.props.pingpong.toString()} ...
         </PingPongValue>
