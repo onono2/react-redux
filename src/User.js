@@ -46,6 +46,11 @@ const UpdateButton = styled.button.attrs({ children: "Save Update" })`
   box-sizing: border-box;
 `;
 
+const PingPongValue = styled.span`
+  width: 100%;
+  height: 50px;
+`;
+
 class User extends Component {
   state = {
     index: "",
@@ -65,8 +70,6 @@ class User extends Component {
   };
 
   handleUpdateItem = () => {
-    console.log(this.props.emp.textEdit);
-    console.log(this.props.emp.indexEdit);
     this.props.updateItem(this.props.emp.indexEdit, this.props.emp.textEdit);
   };
 
@@ -94,7 +97,31 @@ class User extends Component {
         <h1>Hello:{this.props.username}</h1>
         <span>Age:{this.props.age}</span>
         <ul>{partners}</ul>
-        <span>{Math.round(new Date().getTime() / 1000)}</span>
+
+        {this.props.ping.userinfo ? (
+          <span>
+            {this.props.ping.userinfo.avatar_url ? (
+              <img
+                alt="Test User Avatar"
+                src={this.props.ping.userinfo.avatar_url}
+              />
+            ) : (
+              ""
+            )}
+
+            {JSON.stringify(this.props.ping.userinfo.data, null, 2)}
+          </span>
+        ) : (
+          <span>
+            {this.props.ping.userinfo.message}
+            <br />
+            {this.props.ping.userinfo.documentation_url}
+          </span>
+        )}
+        <PingPongValue>
+          is Pinging: ... {this.props.pingpong.toString()} ...
+        </PingPongValue>
+        <span>{this.props.pingpong}</span>
         <EditBox onChange={this.handleChange} value={this.props.emp.textEdit} />
         <UpdateButton onClick={this.handleUpdateItem} />
       </Fragment>

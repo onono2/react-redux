@@ -31,6 +31,18 @@ const ClearHistory = styled.button.attrs({ children: "Clear History" })`
   margin: 8px;
 `;
 
+const PingButton = styled.button.attrs({ children: "Ping" })`
+  border-radius: 8px;
+  padding: 8px;
+  margin: 8px;
+`;
+
+const PongButton = styled.button.attrs({ children: "Pong" })`
+  border-radius: 8px;
+  padding: 8px;
+  margin: 8px;
+`;
+
 class App extends Component {
   state = {
     todoInt: 0
@@ -43,10 +55,16 @@ class App extends Component {
   render() {
     return (
       <Wrapper>
+        <PingButton onClick={this.props.pingButton} />
+        <PongButton onClick={this.props.pongButton} />
+        <span style={{ color: "#c9c9c9" }}>
+          User Time Stamp:{Math.round(new Date().getTime() / 1000)}
+        </span>
         <User
           username={this.props.user.name}
           age={this.props.user.age}
           salary={this.props.emp.value}
+          pingpong={this.props.ping.isPinging}
         />
         <button
           onClick={() =>
@@ -90,6 +108,16 @@ const mapDispatchtoProps = dispatch => {
     resetSalary: () => {
       dispatch({
         type: "SUBTRACT"
+      });
+    },
+    pingButton: () => {
+      dispatch({
+        type: "PING"
+      });
+    },
+    pongButton: () => {
+      dispatch({
+        type: "PONG"
       });
     }
   };

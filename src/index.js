@@ -2,7 +2,19 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
 import { combineReducers, applyMiddleware, createStore } from "redux";
+import { of, concat } from "rxjs";
+import { ajax } from "rxjs/ajax";
 import logger from "redux-logger";
+import {
+  filter,
+  delay,
+  mergeMap,
+  flatMap,
+  mapTo,
+  catchError,
+  takeUntil
+} from "rxjs/operators";
+import { ofType, createEpicMiddleware, combineEpics } from "redux-observable";
 import App from "./App";
 
 const initialState = {
@@ -73,10 +85,114 @@ const employeeReducer = (state = initialState, action) => {
   }
 };
 
+const pingReducer = (state = { isPinging: false, userinfo: "" }, action) => {
+  switch (action.type) {
+    case "PING":
+      return { ...state, isPinging: true };
+
+    case "PONG":
+      return { ...state, isPinging: false };
+
+    case "PONGPONG":
+      return { ...state, isPinging: true };
+
+    case "FETCH_USER_FULFILLED":
+      return { ...state, userinfo: action.userinfo };
+
+    case "FETCH_USER_REJECTED":
+      return { ...state, userinfo: action.payload, error: action.error };
+
+    default:
+      return state;
+  }
+};
+
+const isFetchingUser = (state = false, action) => {
+  switch (action.type) {
+    case "FETCH_USER":
+      return true;
+
+    case "FETCH_USER_FULFILLED":
+    case "FETCH_USER_CANCELLED":
+      return false;
+
+    default:
+      return state;
+  }
+};
+
+/*const store = createStore(
+  combineReducers({
+    emp: employeeReducer,
+    user: userReducer,
+    ping: pingReducer
+  }),
+  applyMiddleware(epicMidd)
+);*/
+
+const fetchUserFulfilled = userinfo => {
+  return {
+    type: "FETCH_USER_FULFILLED",
+    userinfo
+  };
+};
+
+const PING = "PING";
+const PONG = "PONG";
+
+const ping = () => ({ type: PING });
+const pong = () => ({ type: PONG });
+
+const changeName = () => ({
+  type: "setName",
+  payload: "Onono Redux Observable",
+  age: 99
+});
+
+const pingEpic = action$ =>
+  action$.pipe(
+    filter(action => action.type === "PING"),
+    ofType("PING"),
+    //delay(1000),
+    mergeMap(response =>
+      ajax.getJSON(`https://scito-dev-api.20scoopscnx.com/topics`).pipe(
+        delay(3000),
+        flatMap(response =>
+          concat(of(pong()), of(changeName()), of(fetchUserFulfilled(response)))
+        ),
+        catchError(error =>
+          of({
+            type: "FETCH_USER_REJECTED",
+            payload: error.xhr.response,
+            error: true
+          })
+        )
+      )
+    )
+  );
+
+const pongEpic = action$ =>
+  action$.pipe(
+    filter(action => action.type === "PONGPONG"),
+    ofType("PONGPONG"),
+    delay(3000),
+    mapTo(ping())
+  );
+
+const rootEpic = combineEpics(pingEpic, pongEpic);
+
+const epicMiddleware = createEpicMiddleware();
+
 const store = createStore(
-  combineReducers({ emp: employeeReducer, user: userReducer }),
-  applyMiddleware(logger)
+  combineReducers({
+    emp: employeeReducer,
+    user: userReducer,
+    ping: pingReducer
+  }),
+  applyMiddleware(epicMiddleware, logger)
 );
+
+epicMiddleware.run(rootEpic);
 
 ReactDOM.render(
   <Provider store={store}>
