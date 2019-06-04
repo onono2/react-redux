@@ -98,7 +98,7 @@ class User extends Component {
         <span>Age:{this.props.age}</span>
         <ul>{partners}</ul>
 
-        {this.props.ping.userinfo !== "" ? (
+        {this.props.ping.userinfo ? (
           <span>
             {this.props.ping.userinfo.avatar_url ? (
               <img
@@ -109,10 +109,14 @@ class User extends Component {
               ""
             )}
 
-            {JSON.stringify(this.props.ping.userinfo, null, 2)}
+            {JSON.stringify(this.props.ping.userinfo.data, null, 2)}
           </span>
         ) : (
-          ""
+          <span>
+            {this.props.ping.userinfo.message}
+            <br />
+            {this.props.ping.userinfo.documentation_url}
+          </span>
         )}
         <PingPongValue>
           is Pinging: ... {this.props.pingpong.toString()} ...

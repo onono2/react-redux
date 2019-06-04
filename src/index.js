@@ -11,7 +11,8 @@ import {
   mergeMap,
   flatMap,
   mapTo,
-  catchError
+  catchError,
+  takeUntil
 } from "rxjs/operators";
 import { ofType, createEpicMiddleware, combineEpics } from "redux-observable";
 import App from "./App";
@@ -106,6 +107,20 @@ const pingReducer = (state = { isPinging: false, userinfo: "" }, action) => {
   }
 };
 
+const isFetchingUser = (state = false, action) => {
+  switch (action.type) {
+    case "FETCH_USER":
+      return true;
+
+    case "FETCH_USER_FULFILLED":
+    case "FETCH_USER_CANCELLED":
+      return false;
+
+    default:
+      return state;
+  }
+};
+
 /*const store = createStore(
   combineReducers({
     emp: employeeReducer,
@@ -140,7 +155,8 @@ const pingEpic = action$ =>
     ofType("PING"),
     //delay(1000),
     mergeMap(response =>
-      ajax.getJSON(`https://api.github.com/users/onono2hfdhdh`).pipe(
+      ajax.getJSON(`https://scito-dev-api.20scoopscnx.com/topics`).pipe(
+        delay(3000),
         flatMap(response =>
           concat(of(pong()), of(changeName()), of(fetchUserFulfilled(response)))
         ),
