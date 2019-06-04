@@ -102,7 +102,7 @@ class User extends Component {
           <span>
             {this.props.ping.userinfo.avatar_url ? (
               <img
-                alt="User Avatar"
+                alt="Test User Avatar"
                 src={this.props.ping.userinfo.avatar_url}
               />
             ) : (
