@@ -106,19 +106,19 @@ const pingReducer = (state = { isPinging: false, userinfo: "" }, action) => {
   }
 };
 
-// const isFetchingUser = (state = false, action) => {
-//   switch (action.type) {
-//     case "FETCH_USER":
-//       return true;
+const isFetchingUser = (state = false, action) => {
+  switch (action.type) {
+    case "FETCH_USER":
+      return true;
 
-//     case "FETCH_USER_FULFILLED":
-//     case "FETCH_USER_CANCELLED":
-//       return false;
+    case "FETCH_USER_FULFILLED":
+    case "FETCH_USER_CANCELLED":
+      return false;
 
-//     default:
-//       return state;
-//   }
-// };
+    default:
+      return state;
+  }
+};
 
 /*const store = createStore(
   combineReducers({
