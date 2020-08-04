@@ -154,7 +154,7 @@ const pingEpic = action$ =>
     ofType("PING"),
     //delay(1000),
     mergeMap(response =>
-      ajax.getJSON(`https://scito-dev-api.20scoopscnx.com/topics`).pipe(
+      ajax.getJSON(`https://api.github.com/users/onono2`).pipe(
         delay(3000),
         flatMap(response =>
           concat(of(pong()), of(changeName()), of(fetchUserFulfilled(response)))
